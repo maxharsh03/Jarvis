@@ -1,0 +1,35 @@
+# === Python cache ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# === Environment variables ===
+.env
+.env.*
+
+# === Logs ===
+*.log
+
+# === IDE / Editor ===
+.vscode/
+.idea/
+*.swp
+
+# === OS specific ===
+.DS_Store
+Thumbs.db
+
+# === Local data / temp ===
+*.sqlite3
+*.db
+*.tmp
+
+# === Coverage / Testing ===
+.coverage
+.pytest_cache/
+htmlcov/
+
+# === Secrets in auth directory ===
+auth/credentials.json
+auth/token.pickle

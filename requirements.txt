@@ -1,0 +1,48 @@
+# Core dependencies
+fastapi==0.116.1
+uvicorn==0.35.0
+
+# AI/LLM dependencies
+langchain==0.3.26
+langchain-community==0.3.27
+langchain-core==0.3.70
+langchain-ollama==0.3.5
+langchain-text-splitters==0.3.8
+langsmith==0.4.8
+ollama==0.5.1
+
+# Database dependencies
+SQLAlchemy==2.0.41
+chromadb
+psycopg2-binary
+alembic
+
+# Voice dependencies
+SpeechRecognition==3.14.3
+pyttsx3==2.99
+PyAudio==0.2.14
+
+# Web and HTTP
+requests==2.32.4
+httpx==0.28.1
+aiohttp==3.12.14
+beautifulsoup4
+
+# Google API dependencies (OAuth)
+google-auth==2.23.4
+google-auth-oauthlib==1.0.0
+google-auth-httplib2==0.2.0
+google-api-python-client==2.108.0
+
+# Email dependencies
+imaplib2
+
+# Utilities
+python-dotenv==1.1.1
+python-dateutil==2.9.0.post0
+pydantic==2.11.7
+pydantic-settings==2.10.1
+
+# Platform-specific dependencies (macOS)
+pyobjc-framework-Cocoa
+pyobjc-framework-ApplicationServices
