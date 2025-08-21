@@ -51,7 +51,7 @@ def get_current_weather(city: str) -> str:
 # 3. StructuredTool for Langchain agent
 get_current_weather_tool = StructuredTool.from_function(
     name="get_current_weather",
-    description="Get the current weather for a city. Use this to answer weather questions.",
+    description="Get current weather conditions for any city or location. Use for weather queries, temperature, precipitation, conditions. Required parameter: city (string).",
     func=get_current_weather,
     args_schema=WeatherInput
 )

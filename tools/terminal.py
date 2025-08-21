@@ -5,7 +5,7 @@ import subprocess
 # === 1. Safety Filter ===
 def requires_confirmation(command: str) -> bool:
     """Check if a command is potentially dangerous."""
-    dangerous_keywords = ['rm -rf', 'reboot', 'shutdown', 'mkfs', 'dd', 'chmod 777', ':(){', 'kill -9', '&gt;', 'curl', 'wget']
+    dangerous_keywords = ['rm -rf', 'reboot', 'shutdown', 'mkfs', 'dd', 'chmod 777', ':(){', 'kill -9', '&gt;', 'curl', 'wget', 'sudo', 'su ', 'doas', 'pkexec']
     return any(word in command.lower() for word in dangerous_keywords)
 
 # === 2. Input Schema for Executing Shell Commands ===

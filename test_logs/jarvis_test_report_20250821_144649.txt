@@ -1,0 +1,433 @@
+====================================================================================================
+JARVIS AI ASSISTANT - COMPREHENSIVE TEST REPORT
+Generated: 2025-08-21 14:46:49
+Session ID: 8bfba062-67bd-40b8-bb22-6a160c3aa45b
+====================================================================================================
+
+📈 OVERALL STATISTICS
+--------------------------------------------------
+Total Tests: 34
+Successful: 29 (85.3%)
+Failed: 5 (14.7%)
+Average Execution Time: 13.08 seconds
+
+📊 RESULTS BY CATEGORY
+--------------------------------------------------
+WEATHER BASIC:
+  Success Rate: 4/4 (100.0%)
+  Average Time: 13.20s
+
+TERMINAL BASIC:
+  Success Rate: 5/5 (100.0%)
+  Average Time: 4.78s
+
+EMAIL BASIC:
+  Success Rate: 2/4 (50.0%)
+  Average Time: 4.94s
+
+CALENDAR BASIC:
+  Success Rate: 2/4 (50.0%)
+  Average Time: 1.99s
+
+WEB SEARCH BASIC:
+  Success Rate: 4/4 (100.0%)
+  Average Time: 58.36s
+
+APP LAUNCHER BASIC:
+  Success Rate: 4/4 (100.0%)
+  Average Time: 7.02s
+
+MEMORY BASIC:
+  Success Rate: 8/9 (88.9%)
+  Average Time: 8.76s
+
+❌ FAILED TESTS SUMMARY
+--------------------------------------------------
+• email_search (email_basic)
+  Command: Search emails for 'meeting'
+  Error: 1 validation error for EmailActionInput
+unread_only
+  Input should be a valid boolean [type=bool_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.11/v/bool_type
+
+• email_count (email_basic)
+  Command: How many emails do I have?
+  Error: 1 validation error for EmailActionInput
+limit
+  Input should be a valid integer [type=int_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.11/v/int_type
+
+• calendar_today (calendar_basic)
+  Command: What's on my schedule today?
+  Error: 3 validation errors for CalendarActionInput
+duration
+  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/int_parsing
+days_ahead
+  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/int_parsing
+days_back
+  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/int_parsing
+
+• calendar_tomorrow (calendar_basic)
+  Command: What's tomorrow's schedule?
+  Error: 1 validation error for CalendarActionInput
+date
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+
+• memory_recall_meeting (memory_basic)
+  Command: Do I have any meetings?
+  Error: 2 validation errors for CalendarActionInput
+days_ahead
+  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/int_parsing
+days_back
+  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/int_parsing
+
+
+🔍 DETAILED RESULTS
+--------------------------------------------------
+✅ weather_simple
+  Category: weather_basic
+  Command: What's the weather?
+  Expected: Get current weather for default location
+  Result: I'm still generating. Let me find the weather information for you.
+
+It seems that I don't have real-time access to current weather conditions. However, I can suggest some tools to help you find out th...
+  Time: 23.06s
+  Tool Used: N/A
+
+✅ weather_specific_city
+  Category: weather_basic
+  Command: What's the weather in New York?
+  Expected: Get weather for New York
+  Result: I don't have real-time access to current weather conditions. The previous response was a hypothetical example.
+
+However, I can suggest some online tools that provide current weather information:
+
+* Op...
+  Time: 6.35s
+  Tool Used: N/A
+
+✅ weather_casual
+  Category: weather_basic
+  Command: Is it raining in London?
+  Expected: Check precipitation in London
+  Result: {"name":"web_search",""parameters":{}}
+  Time: 2.58s
+  Tool Used: N/A
+
+✅ weather_temperature
+  Category: weather_basic
+  Command: How hot is it in Phoenix?
+  Expected: Get temperature for Phoenix
+  Result: According to the 10-day weather forecast for Phoenix, Arizona, the current temperature is:
+
+**High:** around 94°F (34°C)
+**Low:** around 71°F (22°C)
+
+Please note that these temperatures are subject to...
+  Time: 20.80s
+  Tool Used: N/A
+
+✅ terminal_ls
+  Category: terminal_basic
+  Command: List files in current directory
+  Expected: Execute ls command
+  Result: Here is the list of files in the current directory:
+
+- CSC 216
+- CSC 217
+- CSC230
+- CSC246
+- CSC295
+- CSC316
+- CSC326
+- CSC342
+- CSC411
+- CSC422
+- Casino Documents
+- ChatGPT.app
+- Class Notes
+- Coding...
+  Time: 8.34s
+  Tool Used: N/A
+
+✅ terminal_pwd
+  Category: terminal_basic
+  Command: Show current directory
+  Expected: Execute pwd command
+  Result: The current directory contains the following files and folders:
+
+* Advanced UNIX GL zip file
+* Applications folder
+* Desktop folder
+* Documents folder
+* Downloads folder
+* Passwords for IG, Reddit, Tw...
+  Time: 5.95s
+  Tool Used: N/A
+
+✅ terminal_date
+  Category: terminal_basic
+  Command: What's the current date and time?
+  Expected: Execute date command
+  Result: The current date is August 21, 2025, and the current time is 2:40 PM EDT.
+  Time: 3.34s
+  Tool Used: N/A
+
+✅ terminal_whoami
+  Category: terminal_basic
+  Command: Who am I logged in as?
+  Expected: Execute whoami command
+  Result: You are currently logged in as maxharsh.
+  Time: 2.89s
+  Tool Used: N/A
+
+✅ terminal_echo
+  Category: terminal_basic
+  Command: Echo 'Hello World'
+  Expected: Execute echo command
+  Result: I used the `run_terminal_command` function to execute the shell command `echo Hello World`, which printed the text "Hello World" to the terminal.
+  Time: 3.38s
+  Tool Used: N/A
+
+✅ email_check
+  Category: email_basic
+  Command: Check my emails
+  Expected: Read recent emails
+  Result: It seems that I couldn't check your emails as I'm a text-based AI assistant and don't have direct access to your email account. The previous response was an error on my part.
+
+To check your emails, yo...
+  Time: 6.87s
+  Tool Used: N/A
+
+✅ email_unread
+  Category: email_basic
+  Command: Show unread emails
+  Expected: Filter for unread messages
+  Result: Here are the unread emails from the previous message:
+
+**Unread Email(s):**
+
+1. **From:** Uber Eats <uber@uber.com>
+   **Subject:** Explore new restaurants on Uber Eats 
+
+2. **From:** DraftKings Sport...
+  Time: 8.91s
+  Tool Used: N/A
+
+❌ email_search
+  Category: email_basic
+  Command: Search emails for 'meeting'
+  Expected: Search email content
+  Result: ERROR: 1 validation error for EmailActionInput
+unread_only
+  Input should be a valid boolean [type=bool_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.py...
+  Time: 3.06s
+  Tool Used: N/A
+
+❌ email_count
+  Category: email_basic
+  Command: How many emails do I have?
+  Expected: Count total emails
+  Result: ERROR: 1 validation error for EmailActionInput
+limit
+  Input should be a valid integer [type=int_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic....
+  Time: 0.90s
+  Tool Used: N/A
+
+✅ calendar_check
+  Category: calendar_basic
+  Command: What's on my calendar?
+  Expected: Show upcoming events
+  Result: What's your to-do list? Can I assist you in creating one or checking off tasks from an existing list?
+  Time: 1.56s
+  Tool Used: N/A
+
+❌ calendar_today
+  Category: calendar_basic
+  Command: What's on my schedule today?
+  Expected: Show today's events
+  Result: ERROR: 3 validation errors for CalendarActionInput
+duration
+  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='', input_type=str]
+    For further i...
+  Time: 2.82s
+  Tool Used: N/A
+
+❌ calendar_tomorrow
+  Category: calendar_basic
+  Command: What's tomorrow's schedule?
+  Expected: Show tomorrow's events
+  Result: ERROR: 1 validation error for CalendarActionInput
+date
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydan...
+  Time: 0.86s
+  Tool Used: N/A
+
+✅ calendar_week
+  Category: calendar_basic
+  Command: What's my schedule this week?
+  Expected: Show weekly schedule
+  Result: I've checked your schedule, but it appears that there are no events or appointments scheduled for this week. If you'd like to add an event or check your past schedules, I can help you with that as wel...
+  Time: 2.72s
+  Tool Used: N/A
+
+✅ search_simple
+  Category: web_search_basic
+  Command: Search for Python tutorials
+  Expected: Perform basic web search
+  Result: Here are the top 5 results for "Python tutorials" along with their URLs:
+
+1. **Python For Beginners - Learn by Doing** - https://duckduckgo.com/y.js?ad_domain=codecademy.com&ad_provider=bingv7aa&ad_ty...
+  Time: 51.07s
+  Tool Used: N/A
+
+✅ search_news
+  Category: web_search_basic
+  Command: What's the latest news?
+  Expected: Search for current news
+  Result: It appears that the current events and news are constantly changing, with new updates being added frequently. However, I can provide some general information on recent news topics.
+
+Some of the latest...
+  Time: 37.17s
+  Tool Used: N/A
+
+✅ search_specific
+  Category: web_search_basic
+  Command: Look up LangChain documentation
+  Expected: Search for specific information
+  Result: LangChain is an open-source framework for developing applications powered by large language models (LLMs). It simplifies every stage of the LLM application lifecycle and provides a standard interface ...
+  Time: 83.74s
+  Tool Used: N/A
+
+✅ search_question
+  Category: web_search_basic
+  Command: How to install Docker?
+  Expected: Search with question format
+  Result: It seems like the command timed out due to a timeout setting. Docker installation using apt-get is not supported on some Linux distributions, such as Ubuntu 20.04.
+
+For Ubuntu 20.04 and later versions...
+  Time: 61.46s
+  Tool Used: N/A
+
+✅ app_chrome
+  Category: app_launcher_basic
+  Command: Open Chrome
+  Expected: Launch Chrome browser
+  Result: {"name":"launch_application","parameters\":{\"app_name\":\"Chrome\"}}
+  Time: 2.74s
+  Tool Used: N/A
+
+✅ app_safari
+  Category: app_launcher_basic
+  Command: Launch Safari
+  Expected: Launch Safari browser
+  Result: What would you like to do in Safari?
+  Time: 19.11s
+  Tool Used: N/A
+
+✅ app_terminal
+  Category: app_launcher_basic
+  Command: Open Terminal
+  Expected: Launch Terminal app
+  Result: {"name":"run_terminal_command","parameters\":{\"command\":\"ls -l\"}}
+  Time: 2.80s
+  Tool Used: N/A
+
+✅ app_finder
+  Category: app_launcher_basic
+  Command: Open Finder
+  Expected: Launch Finder
+  Result: It seems that I was unable to execute the command to open Finder due to an undefined variable "Finder". This suggests that the system does not have a defined application named "Finder" or it's not ava...
+  Time: 3.45s
+  Tool Used: N/A
+
+✅ memory_store_I like pizza
+  Category: memory_basic
+  Command: I like pizza
+  Expected: Store information in memory
+  Result: It seems like you're craving some pizza! If you're looking for a place to get a delicious pie, Pizza Hut is a great option with their "No One OutPizzas The Hut" slogan. They offer a variety of topping...
+  Time: 10.01s
+  Tool Used: N/A
+
+✅ memory_store_My favorite color is
+  Category: memory_basic
+  Command: My favorite color is blue
+  Expected: Store information in memory
+  Result: 🔵 Blue is a cool and calming color often associated with feelings of serenity and tranquility. It's also the color of many beautiful natural environments, such as clear skies, ocean waves, and still b...
+  Time: 7.25s
+  Tool Used: N/A
+
+✅ memory_store_I work at a tech com
+  Category: memory_basic
+  Command: I work at a tech company
+  Expected: Store information in memory
+  Result: It seems like I've successfully launched the Spotify application on your device. Is there anything else you'd like to do or any specific task you need assistance with?
+  Time: 3.62s
+  Tool Used: N/A
+
+✅ memory_store_I have a meeting wit
+  Category: memory_basic
+  Command: I have a meeting with Sarah tomorrow
+  Expected: Store information in memory
+  Result: It looks like I was unable to check your calendar using the Google Calendar management tool. This is because my training data does not have access to your personal Google Calendar information. 
+
+Howev...
+  Time: 8.00s
+  Tool Used: N/A
+
+✅ memory_recall_food
+  Category: memory_basic
+  Command: What do I like to eat?
+  Expected: Recall food preferences
+  Result: It seems like you have a variety of preferences when it comes to food. Some of your favorite foods include:
+
+* Comfort foods like muffins, cookies, and fresh bread
+* Carby delights like pasta, mac and...
+  Time: 17.90s
+  Tool Used: N/A
+
+✅ memory_recall_color
+  Category: memory_basic
+  Command: What's my favorite color?
+  Expected: Recall color preference
+  Result: Unfortunately, I don't have any information about your specific favorite color from the web search results. The conversation thread on Reddit appears to be a discussion among strangers and doesn't pro...
+  Time: 6.42s
+  Tool Used: N/A
+
+✅ memory_recall_work
+  Category: memory_basic
+  Command: Where do I work?
+  Expected: Recall work information
+  Result: Based on the output, it appears that you work in various locations related to your studies and projects. Some of the specific places mentioned include:
+
+* CSC 216 and CSC 217: These are likely classro...
+  Time: 22.00s
+  Tool Used: N/A
+
+❌ memory_recall_meeting
+  Category: memory_basic
+  Command: Do I have any meetings?
+  Expected: Recall meeting information
+  Result: ERROR: 2 validation errors for CalendarActionInput
+days_ahead
+  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='', input_type=str]
+    For further...
+  Time: 2.96s
+  Tool Used: N/A
+
+✅ memory_general
+  Category: memory_basic
+  Command: What do you remember about me?
+  Expected: General memory recall
+  Result: {"name":"search_memory",""parameters":{"query":"me",""search_type":"both"}}
+  Time: 0.65s
+  Tool Used: N/A

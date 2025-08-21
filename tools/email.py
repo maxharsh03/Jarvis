@@ -326,16 +326,32 @@ class EmailActionInput(BaseModel):
     body: str = Field(default="", description="For send: email body")
     query: str = Field(default="", description="For search: search query")
 
-def email_tool_main(action: str, **kwargs) -> str:
+def email_tool_main(action: str, limit: int = 5, unread_only: bool = True, 
+                   to: str = "", subject: str = "", body: str = "", query: str = "") -> str:
     """Main email tool that handles check, send, and search actions."""
-    if action == "check":
-        return check_emails(kwargs.get('limit', 5), kwargs.get('unread_only', True))
-    elif action == "send":
-        return send_email(kwargs['to'], kwargs['subject'], kwargs['body'])
-    elif action == "search":
-        return search_emails(kwargs['query'], kwargs.get('limit', 10))
-    else:
-        return "❌ Invalid email action. Use 'check', 'send', or 'search'."
+    try:
+        # Ensure parameters are not None
+        limit = limit if limit is not None else 5
+        unread_only = unread_only if unread_only is not None else True
+        to = to if to is not None else ""
+        subject = subject if subject is not None else ""
+        body = body if body is not None else ""
+        query = query if query is not None else ""
+        
+        if action == "check":
+            return check_emails(limit, unread_only)
+        elif action == "send":
+            if not to:
+                return "❌ Email recipient required for send action."
+            return send_email(to, subject, body)
+        elif action == "search":
+            if not query:
+                return "❌ Search query required for search action."
+            return search_emails(query, limit)
+        else:
+            return "❌ Invalid email action. Use 'check', 'send', or 'search'."
+    except Exception as e:
+        return f"❌ Error in email tool: {str(e)}"
 
 email_tool = StructuredTool.from_function(
     name="email_management",

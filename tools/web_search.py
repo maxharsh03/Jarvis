@@ -27,7 +27,7 @@ def web_search(query: str, num_results: int = 3) -> str:
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
         
-        response = requests.get(search_url, params=params, headers=headers, timeout=10)
+        response = requests.get(search_url, params=params, headers=headers, timeout=5)  # Reduced timeout
         
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'html.parser')

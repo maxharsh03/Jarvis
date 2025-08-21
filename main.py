@@ -1,6 +1,8 @@
 import os
 import logging
 import time
+import traceback
+import uuid
 from dotenv import load_dotenv
 
 from voice.stt import SpeechToText
@@ -15,16 +17,8 @@ from tools.calendar_oauth import calendar_oauth_tool
 from tools.web_search import web_search_tool
 from tools.memory import smart_lookup_tool, recent_context_tool
 
-from agents.intent_classifier import intent_classifier, Intent
-from agents.tool_validator import tool_validator
-from agents.state_manager import state_manager
-
 from langchain_ollama import ChatOllama
-from langchain_core.prompts import ChatPromptTemplate
-from langchain.agents import AgentExecutor, create_tool_calling_agent
-from langchain.memory import ConversationSummaryBufferMemory
 from db.memory import memory_system
-import uuid
 
 load_dotenv()
 
@@ -40,123 +34,155 @@ stt = SpeechToText(mic_index=MIC_INDEX)
 tts = TextToSpeech()
 
 # Language model
-llm = ChatOllama(model="llama3.2")
+llm = ChatOllama(model="qwen:latest")
 
-# Available tools
-tools = [
-    get_current_weather_tool,
-    run_terminal_command_tool,
-    app_launcher_tool,
-    email_tool,
-    calendar_tool,
-    web_search_tool,
-    smart_lookup_tool,
-    recent_context_tool
-]
+# Tool registry for direct execution
+TOOL_REGISTRY = {
+    "get_current_weather": get_current_weather_tool.func,
+    "run_terminal_command": run_terminal_command_tool.func,
+    "launch_application": app_launcher_tool.func,
+    "email_management": email_tool.func,
+    "calendar_management": calendar_tool.func,
+    "web_search": web_search_tool.func,
+    "search_memory": smart_lookup_tool.func,
+    "get_recent_context": recent_context_tool.func,
+}
 
-# System prompt
-prompt = ChatPromptTemplate.from_messages([
-    ("system", (
-        "You are Jarvis, a helpful, witty, and intelligent AI assistant with access to various tools. "
-        "Use contextual inference and avoid redundant questions. Always check memory first for relevant information. "
-        "Keep responses short, smart, and human-like. If the user says 'Jarvis shut down', terminate immediately.\n\n"
-        
-        "TOOL USAGE GUIDELINES:\n\n"
-        
-        "🌤️ WEATHER:\n"
-        "- User: 'what's the weather' → get_current_weather_tool(location='current location')\n"
-        "- User: 'weather in NYC' → get_current_weather_tool(location='New York City')\n"
-        "- User: 'is it raining?' → get_current_weather_tool(location='current location')\n\n"
-        
-        "💻 TERMINAL:\n"
-        "- User: 'list files on desktop' → run_terminal_command(command='ls ~/Desktop')\n"
-        "- User: 'run ellis' → run_terminal_command(command='ls')\n"
-        "- User: 'show me what's in this folder' → run_terminal_command(command='ls -la')\n"
-        "- User: 'check git status' → run_terminal_command(command='git status')\n"
-        "- User: 'create a folder called test' → run_terminal_command(command='mkdir test')\n\n"
-        
-        "📅 CALENDAR:\n"
-        "- User: 'schedule gym tomorrow at 3pm' → calendar_management(action='create', title='gym', date='2024-XX-XX', time='15:00')\n"
-        "- User: 'I'm going to the gym at 5' → calendar_management(action='create', title='gym', time='17:00')\n"
-        "- User: 'what's on my calendar' → calendar_management(action='check')\n"
-        "- User: 'check my schedule for next week' → calendar_management(action='check', days_ahead=7)\n\n"
-        
-        "📧 EMAIL:\n"
-        "- User: 'send email to john@example.com' → email_tool(action='send', to='john@example.com')\n"
-        "- User: 'check my emails' → email_tool(action='read')\n"
-        "- User: 'send message about meeting' → email_tool(action='send', subject='meeting', content='...')\n\n"
-        
-        "🚀 APP LAUNCHER:\n"
-        "- User: 'open chrome' → app_launcher_tool(app_name='chrome')\n"
-        "- User: 'launch spotify' → app_launcher_tool(app_name='spotify')\n"
-        "- User: 'start slack' → app_launcher_tool(app_name='slack')\n\n"
-        
-        "🔍 WEB SEARCH:\n"
-        "- User: 'search for python tutorials' → web_search_tool(query='python tutorials')\n"
-        "- User: 'look up weather API' → web_search_tool(query='weather API')\n"
-        "- User: 'what is machine learning' → web_search_tool(query='what is machine learning')\n\n"
-        
-        "🧠 MEMORY:\n"
-        "- User: 'what did we discuss earlier' → smart_lookup_tool(query='recent discussion')\n"
-        "- User: 'remember my preferences' → recent_context_tool()\n"
-        "- Always check memory BEFORE using other tools for relevant context\n\n"
-        
-        "Parse user intent, extract parameters, and call the appropriate tool with proper arguments."
-    )),
-    ("human", "{input}"),
-    ("placeholder", "{agent_scratchpad}")
-])
+# Two-stage system prompts
+TOOL_SELECTION_PROMPT = """You are Jarvis, an AI assistant that selects tools to execute user commands.
 
-# Conversation memory
-memory = ConversationSummaryBufferMemory(
-    llm=llm, 
-    memory_key="chat_history", 
-    return_messages=True,
-    max_token_limit=2000
-)
+Your job is to analyze the user command and output EXACTLY ONE JSON object with the tool to call.
 
-# Agent setup
-agent = create_tool_calling_agent(llm=llm, tools=tools, prompt=prompt)
-executor = AgentExecutor(agent=agent, tools=tools, memory=memory, verbose=True)
+AVAILABLE TOOLS:
+- get_current_weather(city: str) - For weather queries
+- run_terminal_command(command: str) - For system commands, file operations
+- launch_application(app_name: str) - For opening apps
+- email_management(action: str, limit: int, unread_only: bool, to: str, subject: str, body: str, query: str) - For email
+- calendar_management(action: str, title: str, date: str, time: str, duration: int, description: str, query: str, days_ahead: int, days_back: int) - For calendar
+- web_search(query: str, num_results: int) - For web searches
+- search_memory(query: str, search_type: str) - For searching past conversations
+- get_recent_context(limit: int) - For recent conversation context
+
+RULES:
+1. Output ONLY valid JSON in this format: {"tool": "tool_name", "parameters": {"param1": "value1", "param2": "value2"}}
+2. Use smart defaults for missing parameters
+3. For weather: default city to "New York" if not specified
+4. For calendar actions: "check", "create", or "search"
+5. For email actions: "check", "send", or "search"
+6. Convert times: "3pm" → "15:00", "tomorrow" → actual date
+7. NO extra text, explanations, or formatting - ONLY the JSON object
+
+EXAMPLES:
+User: "What's the weather in London?"
+{"tool": "get_current_weather", "parameters": {"city": "London"}}
+
+User: "List files"
+{"tool": "run_terminal_command", "parameters": {"command": "ls -la"}}
+
+User: "Open Chrome"
+{"tool": "launch_application", "parameters": {"app_name": "Chrome"}}
+
+User: "Check my emails"
+{"tool": "email_management", "parameters": {"action": "check", "limit": 5, "unread_only": true}}
+
+User: "Schedule tennis tomorrow at 3pm"
+{"tool": "calendar_management", "parameters": {"action": "create", "title": "tennis", "date": "tomorrow", "time": "15:00"}}
+
+Now analyze this command and output the JSON:"""
+
+RESPONSE_GENERATION_PROMPT = """You are Jarvis, an AI assistant. A tool was executed based on the user's command.
+
+Convert the tool result into a natural, conversational response. Be concise and helpful.
+
+USER COMMAND: {command}
+TOOL USED: {tool_name}
+TOOL RESULT: {tool_result}
+
+Provide a natural response based on the tool result:"""
 
 
-# Helper functions
-def _format_task_completion(validation_result):
-    """Format completed task for agent execution."""
-    fields = validation_result.extracted_fields
-    if 'title' in fields:  # Calendar event
-        return f"Create calendar event: title='{fields.get('title')}', date='{fields.get('date', 'tomorrow')}', time='{fields.get('time', '09:00')}'"
-    elif 'to' in fields:  # Email
-        return f"Send email to {fields['to']} with subject '{fields.get('subject', '')}' and content '{fields.get('content', '')}'"
-    elif 'query' in fields:  # Search
-        return f"Search for: {fields['query']}"
-    else:
-        return f"Execute task with fields: {fields}"
-
-def _format_enhanced_input(command, intent, validation_result):
-    """Format enhanced input with context and extracted fields."""
-    # Get relevant context from memory
-    context = memory_system.get_context_for_query(command)
+# Custom Tool Execution System
+def execute_tool_command(command: str) -> str:
+    """Two-stage tool execution system"""
+    import json
+    import traceback
     
-    # Build enhanced input
-    enhanced_parts = []
-    
-    if context:
-        enhanced_parts.append(f"Context from memory:\n{context}")
-    
-    # Add state context
-    state_summary = state_manager.get_state_summary()
-    if state_summary != "No active tasks.":
-        enhanced_parts.append(f"Current state: {state_summary}")
-    
-    # Add intent and extracted fields
-    enhanced_parts.append(f"Intent: {intent.value}")
-    if validation_result.extracted_fields:
-        enhanced_parts.append(f"Extracted fields: {validation_result.extracted_fields}")
-    
-    enhanced_parts.append(f"Current query: {command}")
-    
-    return "\n\n".join(enhanced_parts)
+    try:
+        # Stage 1: Get tool selection as JSON
+        logging.info("🎯 Stage 1: Getting tool selection...")
+        tool_prompt = f"{TOOL_SELECTION_PROMPT}\n\nUser: \"{command}\""
+        
+        response = llm.invoke(tool_prompt)
+        json_response = response.content.strip()
+        
+        logging.info(f"📋 Raw model response: {json_response}")
+        
+        # Clean up response - sometimes models add extra text
+        if json_response.startswith("```json"):
+            json_response = json_response.replace("```json", "").replace("```", "").strip()
+        
+        # Find JSON object in response
+        start_idx = json_response.find('{')
+        end_idx = json_response.rfind('}') + 1
+        if start_idx != -1 and end_idx > start_idx:
+            json_response = json_response[start_idx:end_idx]
+        
+        # Parse JSON response
+        try:
+            tool_call = json.loads(json_response)
+            tool_name = tool_call["tool"]
+            parameters = tool_call["parameters"]
+            
+            logging.info(f"🔧 Tool: {tool_name}")
+            logging.info(f"📝 Parameters: {parameters}")
+            
+        except json.JSONDecodeError as e:
+            logging.error(f"❌ JSON parsing failed: {e}")
+            logging.error(f"Raw response: {json_response}")
+            return "Sorry, I had trouble understanding that command. Could you rephrase it?"
+        except KeyError as e:
+            logging.error(f"❌ Missing key in JSON: {e}")
+            return "Sorry, I couldn't determine what action to take. Could you be more specific?"
+        
+        # Stage 2: Execute the tool
+        if tool_name not in TOOL_REGISTRY:
+            logging.error(f"❌ Unknown tool: {tool_name}")
+            return f"Sorry, I don't have access to the '{tool_name}' function."
+        
+        logging.info("🚀 Stage 2: Executing tool...")
+        tool_func = TOOL_REGISTRY[tool_name]
+        
+        try:
+            # Execute the tool with parameters
+            tool_result = tool_func(**parameters)
+            logging.info(f"✅ Tool executed successfully")
+            logging.info(f"📊 Tool result: {tool_result[:200]}...")
+            
+        except TypeError as e:
+            logging.error(f"❌ Tool execution failed - parameter error: {e}")
+            return f"Sorry, I had trouble with the parameters for that command. Error: {str(e)}"
+        except Exception as e:
+            logging.error(f"❌ Tool execution failed: {e}")
+            return f"Sorry, I encountered an error: {str(e)}"
+        
+        # Stage 3: Generate natural response
+        logging.info("💬 Stage 3: Generating conversational response...")
+        response_prompt = RESPONSE_GENERATION_PROMPT.format(
+            command=command,
+            tool_name=tool_name,
+            tool_result=tool_result
+        )
+        
+        final_response = llm.invoke(response_prompt)
+        result = final_response.content.strip()
+        
+        logging.info(f"🎤 Final response: {result[:100]}...")
+        return result
+        
+    except Exception as e:
+        logging.error(f"❌ Execute tool command failed: {e}")
+        logging.error(traceback.format_exc())
+        return "Sorry, I encountered an unexpected error processing your request."
 
 # Main interaction loop
 def write():
@@ -201,63 +227,22 @@ def write():
                         tts.speak("Shutting down, sir.")
                         break
 
-                    # Handle pending task responses
-                    validation_result = tool_validator.complete_task_with_response(command)
-                    if validation_result:
-                        if validation_result.is_valid:
-                            # Task completed
-                            logging.info("✅ Completed pending task with user response")
-                            enhanced_input = _format_task_completion(validation_result)
-                        else:
-                            # Still missing info
-                            content = validation_result.clarification
-                            logging.info(f"📝 Still need clarification: {content}")
-                            print("Jarvis:", content)
-                            tts.speak(content)
-                            last_interaction_time = time.time()
-                            continue
-                    else:
-                        # New command - classify and validate
-                        intent, confidence = intent_classifier.classify_intent(command)
-                        logging.info(f"🎯 Classified intent: {intent.value} (confidence: {confidence:.2f})")
-                        
-                        validation_result = tool_validator.validate_and_extract(command, intent)
-                        
-                        if not validation_result.is_valid:
-                            # Missing fields, ask for clarification
-                            content = validation_result.clarification
-                            logging.info(f"❓ Need clarification: {content}")
-                            print("Jarvis:", content)
-                            tts.speak(content)
-                            last_interaction_time = time.time()
-                            continue
-                        
-                        # All fields present, proceed
-                        enhanced_input = _format_enhanced_input(command, intent, validation_result)
-                    
-                    logging.info("🤖 Sending command to agent...")
-                    
-                    response = executor.invoke({"input": enhanced_input})
-                    content = response["output"]
+                    # Use new two-stage tool execution system
+                    logging.info("🤖 Processing command with new system...")
+                    content = execute_tool_command(command)
                     
                     # Store in memory
                     try:
-                        tools_used = []
-                        if "intermediate_steps" in response:
-                            for step in response["intermediate_steps"]:
-                                if hasattr(step[0], 'tool'):
-                                    tools_used.append(step[0].tool)
-                        
                         memory_system.store_conversation(
                             session_id=session_id,
                             user_message=command,
                             assistant_response=content,
-                            tools_used=tools_used
+                            tools_used=[]  # We'll enhance this later if needed
                         )
                     except Exception as e:
                         logging.warning(f"⚠️ Failed to store conversation in memory: {e}")
                     
-                    logging.info(f"✅ Agent responded: {content}")
+                    logging.info(f"✅ System responded: {content}")
 
                     print("Jarvis:", content)
                     tts.speak(content)

@@ -389,25 +389,34 @@ class CalendarActionInput(BaseModel):
     duration: int = Field(default=60, description="For create: duration in minutes")
     description: str = Field(default="", description="For create: event description")
     query: str = Field(default="", description="For search: search query")
-    days_ahead: Optional[int] = Field(default=7, description="For check: days ahead to look")
-    days_back: Optional[int] = Field(default=30, description="For search: days back to search")
+    days_ahead: int = Field(default=7, description="For check: days ahead to look")
+    days_back: int = Field(default=30, description="For search: days back to search")
 
-def calendar_tool_main(action: str, **kwargs) -> str:
+def calendar_tool_main(action: str, title: str = "", date: str = "", time: str = "", 
+                      duration: int = 60, description: str = "", query: str = "", 
+                      days_ahead: int = 7, days_back: int = 30) -> str:
     """Main calendar tool that handles check, create, and search actions."""
     try:
+        # Ensure parameters are not None and have valid defaults
+        title = title if title is not None else ""
+        date = date if date is not None else ""
+        time = time if time is not None else ""
+        duration = duration if duration is not None and duration > 0 else 60
+        description = description if description is not None else ""
+        query = query if query is not None else ""
+        days_ahead = days_ahead if days_ahead is not None and days_ahead > 0 else 7
+        days_back = days_back if days_back is not None and days_back > 0 else 30
+        
         if action == "check":
-            days_ahead = kwargs.get('days_ahead', 7)
-            if days_ahead is None:
-                days_ahead = 7
             return check_calendar_events(days_ahead)
         
         elif action == "create":
-            title = kwargs.get('title', '').strip()
+            title = title.strip()
             if not title:
                 return "❌ Event title is required for creating calendar events. What should I call this event?"
             
             # Smart date resolution - fix hardcoded dates
-            date = kwargs.get('date', '').strip()
+            date = date.strip()
             if not date:
                 # Default to tomorrow instead of hardcoded date
                 date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
@@ -415,18 +424,12 @@ def calendar_tool_main(action: str, **kwargs) -> str:
                 # Parse natural language dates
                 date = _parse_date(date)
             
-            time = kwargs.get('time', '').strip()
+            time = time.strip()
             if not time:
                 time = '09:00'  # Default to 9 AM
             else:
                 # Validate and normalize time format
                 time = _parse_time(time)
-            
-            duration = kwargs.get('duration', 60)
-            if duration is None or duration <= 0:
-                duration = 60
-            
-            description = kwargs.get('description', '')
             
             # Validate that all required fields are present and properly formatted
             if not _validate_calendar_fields(title, date, time):
@@ -435,13 +438,9 @@ def calendar_tool_main(action: str, **kwargs) -> str:
             return create_calendar_event(title, date, time, duration, description)
         
         elif action == "search":
-            query = kwargs.get('query', '').strip()
+            query = query.strip()
             if not query:
                 return "❌ Search query is required for searching calendar events."
-            
-            days_back = kwargs.get('days_back', 30)
-            if days_back is None:
-                days_back = 30
                 
             return search_calendar_events(query, days_back)
         
